@@ -1,12 +1,12 @@
 #include <Arduino.h>
-#include "../lib/SmartRC-CC1101/ELECHOUSE_CC1101_SRC_DRV.h"
+#include "../lib/ELECHOUSE_CC1101/ELECHOUSE_CC1101.h"
+
 
 #define size 60
 byte buffer[size];
 
 void setup() {
     ELECHOUSE_cc1101.Init();
-// write your initialization code here
 }
 
 void loop() {

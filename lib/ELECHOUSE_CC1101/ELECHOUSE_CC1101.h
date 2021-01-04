@@ -1,22 +1,54 @@
 /*
-  ELECHOUSE_CC1101.cpp - CC1101 module library
-  Copyright (c) 2010 Michael.
-    Author: Michael, <www.elechouse.com>
-    Version: November 12, 2010
+	This library was originally copyright of Michael at elechouse.com but permision was
+    granted by Wilson Shen on 2016-10-23 for me (Simon Monk) to uodate the code for Arduino 1.0+
+    and release the code on github under the MIT license.
+Wilson Shen <elechouse@elechouse.com>	23 October 2016 at 02:08
+To: Simon Monk <srmonk@gmail.com>
+Thanks for your email.
+You are free to put it in github and to do and change.
+On Oct 22, 2016 10:07 PM, "Simon Monk" <srmonk@gmail.com> wrote:
+	Hi,
+	I'm Simon Monk, I'm currently writing the Electronics Cookbook for O'Reilly. I use your
+	ELECHOUSE_CC1101 library in a 'recipe'. Your library is by far the easiest to use of
+	the libraries for this device, but the .h and .cpp file both reference WProgram.h which
+	as replaced by Arduino.h in Arduino 1.0.
+	Rather than have to talk my readers through applying a fix to your library, I'd like
+	your permission to put the modified lib into Github and add an example from the book.
+	I would of course provide a link to your website in the book and mention that you can buy
+	the modules there. If its ok, I'd give the code an MIT OS license, to clarify its use.
+	Thanks for a great library,
+	Kind Regards,
+	Simon Monk.
 
-  This library is designed to use CC1101/CC1100 module on Arduino platform.
-  CC1101/CC1100 module is an useful wireless module.Using the functions of the 
-  library, you can easily send and receive data by the CC1101/CC1100 module. 
-  Just have fun!
-  For the details, please refer to the datasheet of CC1100/CC1101.
-----------------------------------------------------------------------------------------------------------------
-cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and publish Wilson Shen (ELECHOUSE).
-----------------------------------------------------------------------------------------------------------------
+
 */
-#ifndef ELECHOUSE_CC1101_SRC_DRV_h
-#define ELECHOUSE_CC1101_SRC_DRV_h
+#ifndef ELECHOUSE_CC1101_h
+#define ELECHOUSE_CC1101_h
 
-#include <Arduino.h>
+#include "Arduino.h"
+
+// Init constants
+#define F_915       0x00
+#define F_433       0x01
+#define F_868       0x02
+
+// Register values for different frequencies
+// Carrier frequency = 868 MHz
+#define F2_868  0x21
+#define F1_868  0x62
+#define F0_868  0x76
+// Carrier frequency = 902 MHz
+#define F2_915  0x22
+#define F1_915  0xB1
+#define F0_915  0x3B
+// Carrier frequency = 433 MHz
+#define F2_433  0x10
+#define F1_433  0xA7
+#define F0_433  0x62
+
+
+
+
 
 //***************************************CC1101 define**************************************************//
 // CC1101 CONFIG REGSITER
@@ -71,18 +103,18 @@ cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and 
 //CC1101 Strobe commands
 #define CC1101_SRES         0x30        // Reset chip.
 #define CC1101_SFSTXON      0x31        // Enable and calibrate frequency synthesizer (if MCSM0.FS_AUTOCAL=1).
-                                        // If in RX/TX: Go to a wait state where only the synthesizer is
-                                        // running (for quick RX / TX turnaround).
+// If in RX/TX: Go to a wait state where only the synthesizer is
+// running (for quick RX / TX turnaround).
 #define CC1101_SXOFF        0x32        // Turn off crystal oscillator.
 #define CC1101_SCAL         0x33        // Calibrate frequency synthesizer and turn it off
-                                        // (enables quick start).
+// (enables quick start).
 #define CC1101_SRX          0x34        // Enable RX. Perform calibration first if coming from IDLE and
-                                        // MCSM0.FS_AUTOCAL=1.
+// MCSM0.FS_AUTOCAL=1.
 #define CC1101_STX          0x35        // In IDLE state: Enable TX. Perform calibration first if
-                                        // MCSM0.FS_AUTOCAL=1. If in RX state and CCA is enabled:
-                                        // Only go to TX if channel is clear.
+// MCSM0.FS_AUTOCAL=1. If in RX state and CCA is enabled:
+// Only go to TX if channel is clear.
 #define CC1101_SIDLE        0x36        // Exit RX / TX, turn off frequency synthesizer and exit
-                                        // Wake-On-Radio mode if applicable.
+// Wake-On-Radio mode if applicable.
 #define CC1101_SAFC         0x37        // Perform AFC adjustment of the frequency synthesizer
 #define CC1101_SWOR         0x38        // Start automatic RX polling sequence (Wake-on-Radio)
 #define CC1101_SPWD         0x39        // Enter power down mode when CSn goes high.
@@ -90,7 +122,7 @@ cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and 
 #define CC1101_SFTX         0x3B        // Flush the TX FIFO buffer.
 #define CC1101_SWORRST      0x3C        // Reset real time clock.
 #define CC1101_SNOP         0x3D        // No operation. May be used to pad strobe commands to two
-                                        // INT8Us for simpler software.
+// INT8Us for simpler software.
 //CC1101 STATUS REGSITER
 #define CC1101_PARTNUM      0x30
 #define CC1101_VERSION      0x31
@@ -110,72 +142,36 @@ cc1101 Driver for RC Switch. Mod by Little Satan. With permission to modify and 
 #define CC1101_TXFIFO       0x3F
 #define CC1101_RXFIFO       0x3F
 
+//*************************************** pins **************************************************//
+#define SCK_PIN   13
+#define MISO_PIN  12
+#define MOSI_PIN  11
+#define SS_PIN    10
+#define GDO0	2
+#define GDO2	9
 //************************************* class **************************************************//
 class ELECHOUSE_CC1101
 {
 private:
-  void SpiStart(void);
-  void SpiEnd(void);
-  void GDO_Set (void);
-  void Reset (void);
-  void setSpi(void);
-  void RegConfigSettings(void);
-  void Calibrate(void);
-  void Split_PKTCTRL0(void);
-  void Split_PKTCTRL1(void);
-  void Split_MDMCFG1(void);
-  void Split_MDMCFG2(void);
-  void Split_MDMCFG4(void);
+    void SpiInit(void);
+    void SpiMode(byte config);
+    byte SpiTransfer(byte value);
+    void GDO_Set (void);
+    void Reset (void);
+    void SpiWriteReg(byte addr, byte value);
+    void SpiWriteBurstReg(byte addr, byte *buffer, byte num);
+    void SpiStrobe(byte strobe);
+    byte SpiReadReg(byte addr);
+    void SpiReadBurstReg(byte addr, byte *buffer, byte num);
+    byte SpiReadStatus(byte addr);
+    void RegConfigSettings(byte f);
 public:
-  void Init(void);
-  byte SpiReadStatus(byte addr);
-  void setSpiPin(byte sck, byte miso, byte mosi, byte ss);
-  void setGDO(byte gdo0, byte gdo2);
-  void setCCMode(bool s);
-  void setModulation(byte m);
-  void setPA(int p);
-  void setMHZ(float mhz);
-  void setChannel(byte chnl);
-  void setChsp(float f);
-  void setRxBW(float f);
-  void setDRate(float d);
-  void setDeviation(float d);
-  void SetTx(void);
-  void SetRx(void);
-  void SetTx(float mhz);
-  void SetRx(float mhz);
-   int getRssi(void);
-  byte getLqi(void);
-  void setSres(void);
-  void SendData(byte *txBuffer, byte size);
-  void SendData(char *txchar);
-  void SendData(byte *txBuffer, byte size, int t);
-  void SendData(char *txchar, int t);
-  byte CheckReceiveFlag(void);
-  byte ReceiveData(byte *rxBuffer);
-  bool CheckCRC(void);
-  void SpiStrobe(byte strobe);
-  void SpiWriteReg(byte addr, byte value);
-  void SpiWriteBurstReg(byte addr, byte *buffer, byte num);
-  byte SpiReadReg(byte addr);
-  void SpiReadBurstReg(byte addr, byte *buffer, byte num);
-  void setClb(byte b, byte s, byte e);
-  void setSyncWord(byte sh, byte sl);
-  void setAddr(byte v);
-  void setWhiteData(bool v);
-  void setPktFormat(byte v);
-  void setCrc(bool v);
-  void setLengthConfig(byte v);
-  void setPacketLength(byte v);
-  void setDcFilterOff(bool v);
-  void setManchester(bool v);
-  void setSyncMode(byte v);
-  void setFEC(bool v);
-  void setPQT(byte v);
-  void setCRC_AF(bool v);
-  void setAppendStatus(bool v);
-  void setAdrChk(byte v);
-  bool CheckRxFifo(int t);
+    void Init(void);
+    void Init(byte f);
+    void SendData(byte *txBuffer, byte size);
+    void SetReceive(void);
+    byte CheckReceiveFlag(void);
+    byte ReceiveData(byte *rxBuffer);
 };
 
 extern ELECHOUSE_CC1101 ELECHOUSE_cc1101;
